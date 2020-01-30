@@ -2,17 +2,20 @@ import os
 import csv
 import numpy as np
 from tqdm import tqdm
+from config import Config
+
+config = Config()
 
 class KittiReader():
-    # README : https://github.com/pratikac/kitti/blob/master/readme.raw.txt
-    def __init__(self, base_dir, mode='train', val_ratio = 0.2):
+    # Kitti README :  https://github.com/pratikac/kitti/blob/master/readme.raw.txt
+    def __init__(self):
 
-        self.base_dir = base_dir
-        self.categories = ['Car', 'Cyclist', 'Pedestrian', 'Truck', 'Van']
+        self.data_dir = config.data_dir
+        self.categories = config.categories
 
-        label_dir = os.path.join(self.base_dir, "training", 'labels')
-        image_dir = os.path.join(self.base_dir, "training", 'images')
-        calib_dir = os.path.join(self.base_dir, "training", 'calib')
+        label_dir = os.path.join(self.data_dir, 'labels')
+        image_dir = os.path.join(self.data_dir, 'images')
+        calib_dir = os.path.join(self.data_dir, 'calib')
 
         # List of annotations 
         # Example of annotation : 
