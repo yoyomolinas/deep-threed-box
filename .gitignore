@@ -1,0 +1,5 @@
+.ipynb_checkpoints
+data/
+*.jpg
+*.png
+__pycache__
