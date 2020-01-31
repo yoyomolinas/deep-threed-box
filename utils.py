@@ -55,8 +55,6 @@ def compute_3d_coordinates(K, T, angle, dimensions, bbox_2d):
 	:return corners_3d: 3d coordinates of vertices in world space
 	"""
 	rot_global = compute_orientation(K, angle, bbox_2d)
-	# rot_global = np.clip(rot_global - np.pi, -np.pi, np.pi) # shift to range -pi, pi
-	# print("rot global ", 180 * rot_global / np.pi)
 	R = np.array([[np.cos(rot_global), 0, np.sin(rot_global)], 
 					[0, 1, 0],
 					[-np.sin(rot_global), 0, np.cos(rot_global)]])

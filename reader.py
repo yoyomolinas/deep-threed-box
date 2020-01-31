@@ -103,10 +103,8 @@ class KittiReader():
         :return: new alpha
         """
         new_alpha = float(alpha)
-        # new_alpha = np.clip((float(alpha) + np.pi) % (2* np.pi), 0, 2 * np.pi) 
-        # new_alpha = float(alpha) + np.pi / 2.
-        # if new_alpha < 0:
-        #     new_alpha = new_alpha + 2. * np.pi
-        #     # make sure angle lies in [0, 2pi]
-        # new_alpha = new_alpha - int(new_alpha / (2. * np.pi)) * (2. * np.pi)
+        while new_alpha < 0:
+            new_alpha += np.pi * 2
+        while new_alpha > np.pi * 2:
+            new_alpha -= np.pi * 2
         return new_alpha
