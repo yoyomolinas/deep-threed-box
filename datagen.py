@@ -37,12 +37,12 @@ class BatchGenerator(keras.utils.Sequence):
         self.image_size = config.image_size
         self.aug_pipe = self.get_aug_pipeline(p = 0.5)
         self.index = list(range(len(self.kitti_reader.image_data)))
-        # random.shuffle(self.index)
+        random.shuffle(self.index)
         self.mode = mode
-        # if self.mode == 'train' :
-        #     self.index = self.index[:int(len(self.index) * config.split)]
-        # else:
-        #     self.index = self.index[int(len(self.index) * config.split):]
+        if self.mode == 'train' :
+            self.index = self.index[:int(len(self.index) * config.split)]
+        else:
+            self.index = self.index[int(len(self.index) * config.split):]
         self.images = {} # {image_path : RGB image}
         self.jitter = jitter
         

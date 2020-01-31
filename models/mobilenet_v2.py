@@ -1,14 +1,12 @@
 from tensorflow import keras
 layers = keras.layers
 
-from config import config as cfg
-
 def l2_normalize(x):
     import tensorflow as tf
     return tf.nn.l2_normalize(x, axis=2)
 
-def network():
-    mobil = keras.applications.mobilenet_v2.MobileNetV2(input_shape=(224, 224, 3), include_top=False, weights='imagenet', pooling='avg')
+def network(input_shape, num_bins):
+    mobil = keras.applications.mobilenet_v2.MobileNetV2(input_shape=input_shape, include_top=False, weights='imagenet', pooling='avg')
     x = mobil.outputs[0]
     # x = layers.Reshape((1, 1, 1280))(x)
     
@@ -19,11 +17,11 @@ def network():
 
     # Orientation branch
     orientation = layers.Dense(4)(x)
-    orientation = layers.Reshape((cfg().bin, -1))(orientation)
+    orientation = layers.Reshape((num_bins, -1))(orientation)
     orientation = layers.Lambda(l2_normalize, name='orientation')(orientation)
 
     # Confidence branch
-    confidence = layers.Dense(cfg().bin, name='confidence', activation = 'softmax')(x)
+    confidence = layers.Dense(num_bins, name='confidence', activation = 'softmax')(x)
 
     # Build model
     model = keras.Model(mobil.inputs, [dimensions, orientation, confidence])

@@ -36,6 +36,7 @@ def generate_keras_callbacks(
     use_save_checkpoint = True,
     use_tensorboard = True,
     use_keep_limited_checkpoints = True,
+    use_early_stopping = True,
     overwrite = False):
     
     from os.path import join
@@ -66,5 +67,9 @@ def generate_keras_callbacks(
     if use_keep_limited_checkpoints:
         keep_limited = keep_limited_checkpoints(dt.ckpt.path)
         callbacks.append(keep_limited)
+    
+    if use_early_stopping:
+        early_stop = cb.EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, mode='min', verbose=1)
+        callbacks.append(early_stop)
 
     return callbacks

@@ -1,6 +1,9 @@
 
 import numpy as np
 from PIL import ImageOps, Image
+import os
+from os.path import join
+
 
 def box(height, width, length):
 	"""
