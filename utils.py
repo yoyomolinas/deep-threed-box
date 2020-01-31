@@ -182,12 +182,7 @@ def recover_angle(anchors, confidences, num_bins):
 	angle = angle_offset + max_anchor_idx * wedge
 
 	# angle modulo 2pi, if exceed 2pi
-	# angle = angle % (2 * np.pi)
-
-	# change to ray back to [-pi, pi]
-	# angle = angle_l - np.pi / 2
-	# if angle > np.pi:
-	# 	angle -= 2 * np.pi
+	angle = angle % (2 * np.pi)
 	angle = round(angle, 2)
 
 	return angle

@@ -44,16 +44,6 @@ def draw_3d_box(img, coords, color = (0, 255, 0), line_width = 2):
     # draw points
     for i in range(8):
         x, y = coords[0][i], coords[1][i]
-        if i in [0]:
-            color = (255, 0, 0)
-        elif i in [1, 2]:
-            color = (0, i * 50 ,  i * 50)
-        elif i in [5]:
-            color = (0, 0, 255 )
-        else:
-            color = (100, 100, 100)
-
-            
         cv2.circle(img, (x, y), 2, color, 3)
 
 """

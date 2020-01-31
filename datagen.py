@@ -196,7 +196,6 @@ class BatchGenerator(keras.utils.Sequence):
             print("rot local ", 180 * rot_local / np.pi)
             print("Annot angle: ", annot['alpha'], "Recovered angle : ", rot_local)
             rot_global = utils.compute_orientation(K, rot_local, bbox)
-            # rot_global = np.clip((rot_global % (2 * np.pi)) - np.pi, -np.pi, np.pi) # shift to range -pi, pi
             print("rot global ", 180 * rot_global / np.pi)
             T = utils.solve_for_translations(K, y_dims, rot_local, rot_global, bbox)
             print("Annot dims: ", annot['dims'], 'Recovered dims : ', y_dims)
