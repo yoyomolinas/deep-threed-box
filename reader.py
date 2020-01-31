@@ -56,7 +56,7 @@ class KittiReader():
                         new_alpha = self.shift_alpha(row['alpha'])
                         translations = np.array([float(row['lx']), float(row['ly']), float(row['lz'])])
                         dimensions = np.array([float(row['dh']), float(row['dw']), float(row['dl'])])
-                        annotation = {'name': row['type'], 'image': image_full_path,
+                        annotation = {'name': row['type'], 'image': image_full_path, 'calib' : calib_full_path,
                                         'xmin': int(float(row['xmin'])), 'ymin': int(float(row['ymin'])),
                                         'xmax': int(float(row['xmax'])), 'ymax': int(float(row['ymax'])),
                                         'dims': dimensions, 'trans' : translations, 'alpha': new_alpha}
@@ -102,5 +102,11 @@ class KittiReader():
         :param alpha: original orientation in KITTI
         :return: new alpha
         """
-        new_alpha = np.clip(float(alpha) + np.pi, 0, 2 * np.pi) 
+        new_alpha = float(alpha)
+        # new_alpha = np.clip((float(alpha) + np.pi) % (2* np.pi), 0, 2 * np.pi) 
+        # new_alpha = float(alpha) + np.pi / 2.
+        # if new_alpha < 0:
+        #     new_alpha = new_alpha + 2. * np.pi
+        #     # make sure angle lies in [0, 2pi]
+        # new_alpha = new_alpha - int(new_alpha / (2. * np.pi)) * (2. * np.pi)
         return new_alpha

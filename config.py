@@ -26,7 +26,7 @@ class Config():
         self.keep_aspect_ratio = False
 
         # set the batch size
-        self.batch_size = 8
+        self.batch_size = 1
 
         # set the categories
         self.categories = ['Car', 'Cyclist', 'Pedestrian']

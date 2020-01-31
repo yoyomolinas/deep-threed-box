@@ -37,7 +37,7 @@ def draw_3d_box(img, coords, color = (0, 255, 0), line_width = 2):
     # draw points
     for i in range(8):
         x, y = coords[0][i], coords[1][i]
-        cv2.circle(img, (x, y), 1, color, 2)    
+        cv2.circle(img, (x, y), 2, (i * 30, (i+1)* 30, 0), 3)
 
 """
 
