@@ -193,13 +193,13 @@ class BatchGenerator(keras.utils.Sequence):
         for img, K, y_dims, y_ort, y_conf, annot in zip(images, Ks, Y_dims, Y_ort, Y_conf, annots):
             bbox = annot['xmin'], annot['ymin'], annot['xmax'], annot['ymax']
             rot_local = utils.recover_angle(y_ort, y_conf, config.bin)
-            print("rot local ", 180 * rot_local / np.pi)
-            print("Annot angle: ", annot['alpha'], "Recovered angle : ", rot_local)
+            # print("rot local ", 180 * rot_local / np.pi)
+            # print("Annot angle: ", annot['alpha'], "Recovered angle : ", rot_local)
             rot_global = utils.compute_orientation(K, rot_local, bbox)
-            print("rot global ", 180 * rot_global / np.pi)
+            # print("rot global ", 180 * rot_global / np.pi)
             T = utils.solve_for_translations(K, y_dims, rot_local, rot_global, bbox)
-            print("Annot dims: ", annot['dims'], 'Recovered dims : ', y_dims)
-            print("Annot translation : ", annot['trans']," Recovered trans;ation : ", T)
+            # print("Annot dims: ", annot['dims'], 'Recovered dims : ', y_dims)
+            # print("Annot translation : ", annot['trans']," Recovered trans;ation : ", T)
             coords_3d = utils.compute_3d_coordinates(K, T, rot_local, y_dims, bbox)
             coords_2d = utils.project_2d(K, coords_3d)
             visualization.draw_3d_box(img, coords_2d)
