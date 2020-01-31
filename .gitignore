@@ -3,3 +3,4 @@ data/
 *.jpg
 *.png
 __pycache__
+.vscode
