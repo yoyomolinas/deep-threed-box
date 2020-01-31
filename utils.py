@@ -2,6 +2,18 @@
 import numpy as np
 from PIL import ImageOps, Image
 
+def box(height, width, length):
+	"""
+	Return 3d box coordinates in given dimensions
+	:param height, width, length: dimensions of the box 
+	:return : 3x8 matrix rows representing x, y, z coordinates respectively
+	"""
+	x_corners = [-length/2, length/2, length/2, length/2, length/2, -length/2, -length/2, -length/2]
+	y_corners = [-height, -height, 0, 0, -height, -height, 0, 0]
+	z_corners = [-width/2, -width/2, -width/2, width/2, width/2, width/2, width/2, -width/2]
+	corners_3d = np.array([x_corners, y_corners, z_corners])
+	return corners_3d
+
 def project_2d(K, coords_3d):
     """
     Project 3d coordinates onto the image plane by
@@ -44,18 +56,14 @@ def compute_3d_coordinates(K, T, angle, dimensions, bbox_2d):
 	"""
 	rot_global = compute_orientation(K, angle, bbox_2d)
 	# rot_global = np.clip(rot_global - np.pi, -np.pi, np.pi) # shift to range -pi, pi
-	print("rot global ", 180 * rot_global / np.pi)
+	# print("rot global ", 180 * rot_global / np.pi)
 	R = np.array([[np.cos(rot_global), 0, np.sin(rot_global)], 
 					[0, 1, 0],
 					[-np.sin(rot_global), 0, np.cos(rot_global)]])
 	T = T.reshape(3, 1)
 	height, width, length = dimensions
-	x_corners = [-length/2, length/2, length/2, length/2, length/2, -length/2, -length/2, -length/2]
-	y_corners = [-height, -height, 0, 0, -height, -height, 0, 0]
-	z_corners = [-width/2, -width/2, -width/2, width/2, width/2, width/2, width/2, -width/2]
-	corners_3d = np.array([x_corners, y_corners, z_corners])
-	corners_3d = R.dot(corners_3d) 
-	corners_3d += T	
+	corners_3d = box(height, width, length)
+	corners_3d = R.dot(corners_3d) + T
 	return corners_3d
 
 def solve_for_translations(K, dimensions, rot_local, rot_global, bbox_2d):
@@ -68,7 +76,6 @@ def solve_for_translations(K, dimensions, rot_local, rot_global, bbox_2d):
 	:return: translation vector
 	"""
 	bbox = bbox_2d
-	print("bbox : ", bbox)
 	# rotation matrix
 	R = np.array([[ np.cos(rot_global), 0,  np.sin(rot_global)],
 					[          0,             1,             0          ],
@@ -77,13 +84,12 @@ def solve_for_translations(K, dimensions, rot_local, rot_global, bbox_2d):
 	b = np.zeros((4, 1))
 	I = np.identity(3)
 
-	xmin_corr, xmax_corr, ymin_corr, ymax_corr = corresponding_vertices(dimensions, rot_local, soft_range=8)
+	xmin_corr, ymin_corr, xmax_corr, ymax_corr = corresponding_vertices(dimensions, rot_local, soft_range=8)
 
-	X  = np.stack([xmin_corr, xmin_corr,
-				   ymin_corr, ymax_corr])
+	X  = np.stack([xmin_corr, ymin_corr,
+				   xmax_corr, ymax_corr])
 	# X: [x, y, z] in object coordinate
 	X = X.T
-	print("shape: ", X.shape)
 
 	# construct equation (4, 3 )
 	for i in range(4):
@@ -94,7 +100,6 @@ def solve_for_translations(K, dimensions, rot_local, rot_global, bbox_2d):
 		M = np.matmul(K, matrix)
 		# x
 		if i % 2 == 0:
-			print("bbox[%i] "%i, bbox[i])
 			A[i, :] = M[0, 0:3] - bbox[i] * M[2, 0:3]
 			b[i, :] = M[2, 3] * bbox[i] - M[0, 3]
 		# y
@@ -117,98 +122,45 @@ def corresponding_vertices(dimensions, rot_local, soft_range = 8):
 	:return : matrix of xmin, ymin, xmax, ymax in 3x4 shape
 	"""
 	height, width, length = dimensions
-	# x_corners = [length, length, length, length, 0, 0, 0, 0]
-	# y_corners = [height, height, 0, 0, height, height, 0, 0]
-	# z_corners = [0, 0, 0, width, width, width, width, 0]
+	corners_3d = box(height, width, length)
 
-	# x_corners = [i - length / 2 for i in x_corners]
-	# y_corners = [i - height for i in y_corners]
-	# z_corners = [i - width / 2 for i in z_corners]
-	# x_corners = [-length/2, length/2, length/2, length/2, length/2, -length/2, -length/2, -length/2]
-	# y_corners = [-height, -height, 0, 0, -height, -height, 0, 0]
-	# z_corners = [-width/2, -width/2, -width/2, width/2, width/2, width/2, width/2, -width/2]
+	point0 = corners_3d[:, 0]
+	point1 = corners_3d[:, 1]
+	point2 = corners_3d[:, 2]
+	point3 = corners_3d[:, 3]
+	point4 = corners_3d[:, 4]
+	point5 = corners_3d[:, 5]
+	point6 = corners_3d[:, 6]
+	point7 = corners_3d[:, 7]
 
-	# corners_3d = np.transpose(np.array([x_corners, y_corners, z_corners]))
-	# point0 = corners_3d[0, :]
-	# point1 = corners_3d[1, :]
-	# point2 = corners_3d[2, :]
-	# point3 = corners_3d[3, :]
-	# point4 = corners_3d[4, :]
-	# point5 = corners_3d[5, :]
-	# point6 = corners_3d[6, :]
-	# point7 = corners_3d[7, :]
-	x_corners = [length, length, length, length, 0, 0, 0, 0]
-	y_corners = [height, 0, height, 0, height, 0, height, 0]
-	z_corners = [0, 0, width, width, width, width, 0, 0]
-
-	x_corners = [i - length / 2 for i in x_corners]
-	y_corners = [i - height for i in y_corners]
-	z_corners = [i - width / 2 for i in z_corners]
-
-	corners_3d = np.transpose(np.array([x_corners, y_corners, z_corners]))
-	point1 = corners_3d[0, :]
-	point2 = corners_3d[1, :]
-	point3 = corners_3d[2, :]
-	point4 = corners_3d[3, :]
-	point5 = corners_3d[6, :]
-	point6 = corners_3d[7, :]
-	point7 = corners_3d[4, :]
-	point8 = corners_3d[5, :]
 
 	# set up projection relation based on local orientation
 	xmin_corr = xmax_corr = ymin_corr = ymax_corr = np.array([0, 0, 0])
-	# print("rot local", 180 * rot_local / np.pi)
-	rot_local = rot_local % (2 * np.pi)
 	if 0 < rot_local < np.pi / 2:
-		print('rot local < pi/2')
-		xmin_corr = point8
-		xmax_corr = point2
-		ymin_corr = point2
-		ymax_corr = point5
+		xmin_corr = point0
+		ymin_corr = point1
+		xmax_corr = point3
+		ymax_corr = point2
 
 	if np.pi / 2 <= rot_local <= np.pi:
-		print(' pi/2 < rot local < pi')
-		xmin_corr = point6
-		xmax_corr = point4
-		ymin_corr = point5
-		ymax_corr = point8
+		xmin_corr = point1
+		ymin_corr = point4
+		xmax_corr = point5
+		ymax_corr = point3
 
 	if np.pi < rot_local <= 3 / 2 * np.pi:
-		print(' np.pi < rot_local <= 3 / 2 * np.pi')
-		# xmin_corr = point2
-		# xmax_corr = point88
-		# ymin_corr = point8
-		# ymax_corr = point1
-		xmin_corr = point4
-		xmax_corr = point8
-		ymin_corr = point6
-		ymax_corr = point5
-		print(xmin_corr, xmax_corr, ymin_corr, ymax_corr)
+		xmin_corr = point3
+		ymin_corr = point1
+		xmax_corr = point0
+		ymax_corr = point6
 
 	if 3 * np.pi / 2 <= rot_local <= 2 * np.pi:
-		print("3 * np.pi / 2 <= rot_local <= 2 * np.pi")
-		xmin_corr = point4
-		xmax_corr = point6
-		ymin_corr = point6
-		ymax_corr = point5
+		xmin_corr = point5
+		ymin_corr = point0
+		xmax_corr = point1
+		ymax_corr = point7
 		
-
-
-	# soft constraint
-	# div = soft_range * np.pi / 180
-	# if 0 < rot_local < div or 2*np.pi-div < rot_local < 2*np.pi:
-	# 	xmin_corr = point8
-	# 	xmax_corr = point6
-	# 	ymin_corr = point6
-	# 	ymax_corr = point5
-
-	# if np.pi - div < rot_local < np.pi + div:
-	# 	xmin_corr = point2
-	# 	xmax_corr = point4
-	# 	ymin_corr = point8
-	# 	ymax_corr = point1
-
-	return xmin_corr, xmax_corr, ymin_corr, ymax_corr
+	return xmin_corr, ymin_corr, xmax_corr, ymax_corr
 
 def recover_angle(anchors, confidences, num_bins):
 	"""

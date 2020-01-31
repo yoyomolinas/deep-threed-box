@@ -4,3 +4,4 @@ data/
 *.png
 __pycache__
 .vscode
+*.pyc
