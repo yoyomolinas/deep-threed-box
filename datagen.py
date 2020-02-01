@@ -8,10 +8,8 @@ from PIL import Image
 import cv2
 from imgaug import augmenters as iaa
 import utils
-from config import Config
+import config
 import visualization
-
-config = Config()
 
 class BatchGenerator(keras.utils.Sequence):
     """

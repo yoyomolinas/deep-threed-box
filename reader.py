@@ -2,9 +2,7 @@ import os
 import csv
 import numpy as np
 from tqdm import tqdm
-from config import Config
-
-config = Config()
+import config
 
 class KittiReader():
     # Kitti README :  https://github.com/pratikac/kitti/blob/master/readme.raw.txt

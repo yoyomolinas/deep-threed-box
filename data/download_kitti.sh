@@ -9,7 +9,6 @@ then
     echo "Extracting images"
     unzip data_object_image_2.zip
     mv training/image_2 training/images
-    rm -rf testing
     rm data_object_image_2.zip
 else 
     echo "Images already exist"
@@ -60,3 +59,5 @@ else
     echo "Train/val splits already exist"
 fi
 
+# remove testing folder
+rm -rf testing

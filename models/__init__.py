@@ -1,5 +1,6 @@
 from models import mobilenet_v2
 
+
 MODELS = {
-    0: mobilenet_v2.network,
+    'mobilenet_v2': mobilenet_v2.network,
 }
