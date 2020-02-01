@@ -106,7 +106,8 @@ def get_angle(i):
     """
     Generate angle with given index
     """
-    angle = (i * np.pi / 360) % (np.pi * 2) 
+    # angle = (i * np.pi / 360) % (np.pi * 2) 
+    angle = 3 * np.pi / 2
     return angle
 
 def get_trans(i):
@@ -114,7 +115,7 @@ def get_trans(i):
     Generate translation vector with given index
     """    
     x = (i * 6 % 1200) / 50 - 12 # left
-    z = 20
+    z = 30
     return np.array([x, 1, z])
 
 def get_bbox(i, width = 1300, height = 325):    
@@ -122,7 +123,8 @@ def get_bbox(i, width = 1300, height = 325):
     Generate bounding box with given index. Perhaps moving 
     """
     # bbox = (i * 2 % (width - 200)), 200, (i * 2 % (width - 200)) + 200, 250 # moving box
-    bbox = int(width/3), int(height/3), int(width/ 2), int(height/2) # center
+    # bbox = int(width/3), int(height/3), int(width/ 2), int(height/2) # center
+    bbox = 500, 170, 550, 210
     return bbox
 
 
