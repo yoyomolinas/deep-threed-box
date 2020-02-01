@@ -4,7 +4,7 @@ then
     if [ ! -f data_object_image_2.zip ]
     then
         echo "Downloading images"
-        wget http://www.cvlibs.net/download.php?file=data_object_image_2.zip
+        wget https://s3.eu-central-1.amazonaws.com/avg-kitti/data_object_image_2.zip
     fi
     echo "Extracting images"
     unzip data_object_image_2.zip
