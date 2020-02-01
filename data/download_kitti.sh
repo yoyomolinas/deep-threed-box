@@ -1,8 +1,3 @@
-
-# Make directory and move into it
-mkdir -p data
-cd data/
-
 # Download images. 7481 training, 7518 testing images
 if [ !  -d "training/images" ]
 then
@@ -64,6 +59,3 @@ then
 else
     echo "Train/val splits already exist"
 fi
-
-# Move out of directory
-cd ../
