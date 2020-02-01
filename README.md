@@ -11,4 +11,5 @@ To Do :
 1. Split dataset using trainval split in used in 3DOP/Mono3D/MV3D"
 2. Train in new instance
 3. Deployment script - End to end deployment given model name and path to save - should include keras, tflite, edgetpu model files
-4. Efficient net impl
+4. Recovery of angles in deployed model
+5. Efficient net impl
