@@ -98,7 +98,6 @@ def main(_argv):
                 epochs=FLAGS.num_epochs,
                 verbose=1,
                 validation_data=valgen,
-                validation_steps=1000,
                 callbacks=train_callbacks,
                 workers = 8,
                 max_queue_size=3)
