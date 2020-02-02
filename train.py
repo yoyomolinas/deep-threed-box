@@ -94,11 +94,11 @@ def main(_argv):
     logging.info("Saving config : %s"%str(cfg))
     logging.info("Starting training")
     model.fit(traingen,
-                steps_per_epoch=1000,
+                steps_per_epoch=7000,
                 epochs=FLAGS.num_epochs,
                 verbose=1,
                 validation_data=valgen,
-                validation_steps=100,
+                validation_steps=200,
                 callbacks=train_callbacks,
                 workers = 8,
                 max_queue_size=3)
