@@ -94,7 +94,7 @@ def main(_argv):
     logging.info("Saving config : %s"%str(cfg))
     logging.info("Starting training")
     model.fit(traingen,
-                steps_per_epoch=8000,
+                steps_per_epoch=80,
                 epochs=FLAGS.num_epochs,
                 verbose=1,
                 validation_data=valgen,
