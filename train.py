@@ -17,7 +17,7 @@ import datagen
 """
 This script trains a model on triplets.
 Example usage: 
-    python train.py --save_to progress/test --num_epochs 500 --batch_size 8 --model mobilenet_v2 --input_size 224,224 --jitter
+    python train.py --save_to progress/test --num_epochs 500 --batch_size 8 --model efficientnet_b0 --input_size 224,224 --jitter --overwrite
 """
 
 flags.DEFINE_string('save_to', config.SAVE_TO_DEFAULT, 'directory to save checkpoints and logs')

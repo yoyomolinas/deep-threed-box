@@ -7,7 +7,7 @@ def l2_normalize(x):
 
 def construct(input_shape, num_bins):
     input_tensor = layers.Input(shape = input_shape, name = 'image')
-    net = keras.applications.mobilenet_v2.MobileNetV2(input_tensor=input_tensor, include_top=False, weights='imagenet', pooling='avg')
+    net = keras.applications.mobilenet.MobileNet(input_tensor=input_tensor, include_top=False, weights='imagenet', pooling='avg')
     x = net.outputs[0]
     # x = layers.Reshape((1, 1, 1280))(x)
     

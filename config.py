@@ -51,6 +51,8 @@ KEEP_ASPECT_RATIO_DEFAULT = False
 # MODELS dictionary that maps model names to construction functions 
 MODELS = {
     'mobilenet_v2': models.mobilenet_v2.construct,
+    'mobilenet_v1': models.mobilenet_v1.construct,
+    'efficientnet_b0' : models.efficientnet.construct,
 }
 
 def save(
