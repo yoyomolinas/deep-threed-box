@@ -100,6 +100,7 @@ def main(_argv):
                 validation_data=valgen,
                 validation_steps=1000,
                 callbacks=train_callbacks,
+                workers = 8,
                 max_queue_size=3)
 
 if __name__ == '__main__':
