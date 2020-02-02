@@ -6,10 +6,10 @@ import config
 
 class KittiReader():
     # Kitti README :  https://github.com/pratikac/kitti/blob/master/readme.raw.txt
-    def __init__(self):
+    def __init__(self, data_dir = config.DATA_DIR, categories = config.CATEGORIES_DEFAULT):
 
-        self.data_dir = config.data_dir
-        self.categories = config.categories
+        self.data_dir = data_dir
+        self.categories = categories
 
         label_dir = os.path.join(self.data_dir, 'labels')
         image_dir = os.path.join(self.data_dir, 'images')

@@ -17,8 +17,14 @@ class BatchGenerator(keras.utils.Sequence):
     """
     def __init__(self,
                 kitti_reader,
-                random_seed = 10, 
-                jitter = False,
+                batch_size = config.BATCH_SIZE_DEFAULT,
+                keep_aspect_ratio = config.KEEP_ASPECT_RATIO_DEFAULT,
+                input_size = config.INPUT_SIZE_DEFAULT,
+                train_ratio = config.TRAIN_RATIO_DEFAULT,
+                num_bins = config.NUM_BINS_DEFAULT,
+                overlap_ratio = config.OVERLAP_DEFAULT,
+                random_seed = config.RANDOM_SEED_DEFAULT,
+                jitter = config.JITTER_DEFAULT,
                 mode = 'train'):
         """
         :param kitti_reader: kitti data reader from reader.py
@@ -27,22 +33,25 @@ class BatchGenerator(keras.utils.Sequence):
         :param jitter: true if augment images
         :param mode: train or test
         """
-        random.seed(random_seed)
+        self.random_seed = random_seed
+        random.seed(self.random_seed)
         assert mode in ['train', 'val']
-        self.keep_aspect_ratio = config.keep_aspect_ratio
+        self.keep_aspect_ratio = keep_aspect_ratio
         self.kitti_reader = kitti_reader
-        self.batch_size = config.batch_size
-        self.image_size = config.image_size
+        self.batch_size = batch_size
+        self.input_size = input_size
         self.aug_pipe = self.get_aug_pipeline(p = 0.5)
         self.index = list(range(len(self.kitti_reader.image_data)))
         random.shuffle(self.index)
         self.mode = mode
         if self.mode == 'train' :
-            self.index = self.index[:int(len(self.index) * config.split)]
+            self.index = self.index[:int(len(self.index) * train_ratio)]
         else:
-            self.index = self.index[int(len(self.index) * config.split):]
+            self.index = self.index[int(len(self.index) * train_ratio):]
         self.images = {} # {image_path : RGB image}
         self.jitter = jitter
+        self.num_bins = num_bins
+        self.overlap_ratio = overlap_ratio
         
     def __len__(self):
         """
@@ -84,14 +93,14 @@ class BatchGenerator(keras.utils.Sequence):
         xmin, ymin, xmax, ymax = annot['xmin'], annot['ymin'], annot['xmax'], annot['ymax']  
         # jitter with bbox coords
         if self.jitter:      
-            xmin = np.clip(xmin  + np.random.randint(-config.jit, config.jit+1), 0, width - 1)
-            ymin = np.clip(ymin  + np.random.randint(-config.jit, config.jit+1), 0, height - 1) 
-            xmax = np.clip(xmax  + np.random.randint(-config.jit, config.jit+1), 0, width - 1)
-            ymax = np.clip(ymax  + np.random.randint(-config.jit, config.jit+1), 0, height - 1)
+            xmin = np.clip(xmin  + np.random.randint(-config.CROP_RANGE_DEFAULT, config.CROP_RANGE_DEFAULT+1), 0, width - 1)
+            ymin = np.clip(ymin  + np.random.randint(-config.CROP_RANGE_DEFAULT, config.CROP_RANGE_DEFAULT+1), 0, height - 1) 
+            xmax = np.clip(xmax  + np.random.randint(-config.CROP_RANGE_DEFAULT, config.CROP_RANGE_DEFAULT+1), 0, width - 1)
+            ymax = np.clip(ymax  + np.random.randint(-config.CROP_RANGE_DEFAULT, config.CROP_RANGE_DEFAULT+1), 0, height - 1)
 
         bbox = (xmin, ymin, xmax, ymax)
         crop = image.crop(bbox)
-        crop = utils.resize(crop, self.image_size, keep_aspect_ratio = self.keep_aspect_ratio)
+        crop = utils.resize(crop, self.input_size, keep_aspect_ratio = self.keep_aspect_ratio)
         crop = np.array(crop)
         
         # TODO flip crop and coordinates
@@ -152,11 +161,11 @@ class BatchGenerator(keras.utils.Sequence):
 
             # prepare target values
             dimensions = annot['dims']
-            orientation = np.zeros((config.bin, 2))
-            confidence = np.zeros(config.bin)
+            orientation = np.zeros((self.num_bins, 2))
+            confidence = np.zeros(self.num_bins)
 
             # compute anchors and respective orientation and confidence value
-            anchors = utils.compute_anchors(annot['alpha'], config.bin, config.overlap)
+            anchors = utils.compute_anchors(annot['alpha'], self.num_bins, self.overlap_ratio)
             for anchor in anchors:
                 # each angle is represented in sin and cos
                 orientation[anchor[0]] = np.array([np.cos(anchor[1]), np.sin(anchor[1])])

@@ -6,7 +6,6 @@ from absl import app, flags, logging
 from absl.flags import FLAGS
 
 import utils
-from models import MODELS
 from datagen import BatchGenerator
 import loss
 import callbacks
@@ -18,59 +17,89 @@ import datagen
 """
 This script trains a model on triplets.
 Example usage: 
-    python train.py --save_path progress/test --epochs 500 --batch_size 32 --model_type 0 --input_size 224,224 --augment 
+    python train.py --save_to progress/test --num_epochs 500 --batch_size 8 --model mobilenet_v2 --input_size 224,224 --jitter
 """
 
-DEFAULT_SAVE_PATH = "progress/test/"
-# DEFAULT_OUTPUT_SIZE = None
-DEFAULT_BATCH_SIZE = 32
-DEFAULT_NUM_EPOCHS = 500
-DEFAULT_IMAGE_SIZE = [224, 224] # width, height
-DEFAULT_MODEL_TYPE = 0
-
-flags.DEFINE_string('save_path', DEFAULT_SAVE_PATH, 'path to save checkpoints and logs')
+flags.DEFINE_string('save_to', config.SAVE_TO_DEFAULT, 'directory to save checkpoints and logs')
 flags.DEFINE_boolean('overwrite', False, 'Overwrite given save path')
 flags.DEFINE_string('from_ckpt', None, 'path to continue training on checkpoint')
-flags.DEFINE_integer('epochs', DEFAULT_NUM_EPOCHS, 'number of epochs')
+flags.DEFINE_boolean('jitter', config.JITTER_DEFAULT, 'Apply image augmentation')
+flags.DEFINE_integer('batch_size', config.BATCH_SIZE_DEFAULT, 'batch size')
+flags.DEFINE_list('input_size', config.INPUT_SIZE_DEFAULT, 'input size in (width, height) format')
+flags.DEFINE_boolean('keep_aspect_ratio', config.KEEP_ASPECT_RATIO_DEFAULT, 'keep aspect ratio when resizing patches')
+flags.DEFINE_list('loss_weights',config.LOSS_WEIGHTS_DEFAULT, 'loss weights size in (w_dimension, w_orientation, w_confidence) format')
+flags.DEFINE_integer('num_bins', config.NUM_BINS_DEFAULT, 'numebr of bins used in orientation regression')
+flags.DEFINE_integer('num_epochs', config.NUM_EPOCHS_DEFAULT, 'number of epochs')
+flags.DEFINE_string('model', config.MODEL_DEFAULT, 'integer model type - %s'%str(config.MODELS.keys()))
 
 def main(_argv):
     assert not ((FLAGS.overwrite) and (FLAGS.from_ckpt is not None))
-    input_size = (int(config.input_size[0]) , int(config.input_size[1])) # (width, height)
-    input_shape = (int(config.input_size[1]), int(config.input_size[0]), 3)
-    logging.info("Loading data")
+    input_size = list(map(int, FLAGS.input_size)) # (width, height)
+    input_shape = (input_size[1], input_size[0], 3)
+    loss_weights = list(map(float, FLAGS.loss_weights))
+
     # Load data
+    logging.info("Loading data")
     kitti_reader = reader.KittiReader()
 
     # Define batch generators
     logging.info("Creating batch generators")
-    traingen = datagen.BatchGenerator(kitti_reader, jitter = config.jit, mode = 'train')
-    valgen = datagen.BatchGenerator(kitti_reader, jitter = False, mode = 'val')
+    traingen = datagen.BatchGenerator(
+        kitti_reader, 
+        batch_size=FLAGS.batch_size,
+        keep_aspect_ratio=FLAGS.keep_aspect_ratio,
+        input_size = input_size,
+        num_bins = FLAGS.num_bins,
+        jitter = FLAGS.jitter,
+        mode = 'train')
+    valgen = datagen.BatchGenerator(
+        kitti_reader, 
+        batch_size=FLAGS.batch_size,
+        keep_aspect_ratio=FLAGS.keep_aspect_ratio,
+        input_size = input_size,
+        num_bins = FLAGS.num_bins,
+        jitter = False,
+        mode = 'val')
 
     # Prepare network
-    model = model.MODELS[config.model](input_shape=input_shape, num_bins = config.bin)
+    logging.info("Constructing model")
+    model = config.MODELS[FLAGS.model](input_shape=input_shape, num_bins = FLAGS.num_bins)
     
     # Setup and compile model
     model.compile(optimizer = 'adam', 
                 loss={'dimensions': 'mean_squared_error', 'orientation': loss.orientation_loss, 'confidence': 'binary_crossentropy'},
-                loss_weights={'dimensions': 1., 'orientation': 10., 'confidence': 5.})
+                loss_weights={'dimensions': loss_weights[0], 'orientation': loss_weights[1], 'confidence': loss_weights[2]})
     
-    # logging.info("Compiled model with loss weights:%s"%str(loss_weights))
+    logging.info("Compiled model with loss weights:%s"%str(loss_weights))
     model.summary()
 
     if FLAGS.from_ckpt is not None:
         logging.info("Loading weights from %s"%FLAGS.from_ckpt)
         model.load_weights(FLAGS.from_ckpt)
 
+    logging.info("Genrating callbacks")
+    train_callbacks = callbacks.get(directory = FLAGS.save_to, overwrite = FLAGS.overwrite)
+    
+    cfg = config.save(
+        FLAGS.save_to, 
+        model = FLAGS.model, 
+        input_size = input_size, 
+        keep_aspect_ratio=FLAGS.keep_aspect_ratio,
+        jitter = FLAGS.jitter,
+        batch_size = FLAGS.batch_size,
+        num_epochs = FLAGS.num_epochs,
+        num_bins=FLAGS.num_bins,
+        loss_weights = loss_weights
+        )
+    logging.info("Saving config : %s"%str(cfg))
     logging.info("Starting training")
-    config.save(dir = FLAGS.save_path)
     model.fit(traingen,
-                steps_per_epoch=8000,
-                epochs=500,
+                steps_per_epoch=3,
+                epochs=FLAGS.num_epochs,
                 verbose=1,
                 validation_data=valgen,
-                validation_steps=1000,
-                shuffle=True,
-                callbacks=callbacks.generate_keras_callbacks(FLAGS.save_path, overwrite = FLAGS.overwrite),
+                validation_steps=2,
+                callbacks=train_callbacks,
                 max_queue_size=3)
 
 if __name__ == '__main__':

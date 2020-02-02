@@ -1,74 +1,87 @@
 from tensorflow.keras import callbacks as cb
 from utils import DirectoryTree
 from absl import logging
+import os
+import parse
 
-def keep_limited_checkpoints(base, n=16):
+LOSS_VARIABLE_TO_MONITOR = 'val_loss'
+
+def LimitCheckpoints(ckpt_path, n=16):
     '''
     Callback to maintain only the checkpoints that have minimal validation loss
     Usage:
-        keeplimited = keep_limited_checkpoints('temp/checkpoints/modelname', n=3)
+        callback = LimitCheckpoints('progress/test/ckpt', n=16)
     '''
     def f(epoch):
-        import os
-        if len(os.listdir(base)) <= n:
+        if len(os.listdir(ckpt_path)) <= n:
             return
 
         max_loss = 0
-        rm_cp = None
-        for cp in os.listdir(base):
-            if cp[(len('weights') + 1):cp.find('hdf5') - 1] == 'nan':
-                rm_cp = cp
-                break
-            
-            if float(cp[(len('weights') + 1):cp.find('hdf5') - 1]) > max_loss:
-                max_loss = float(cp[len('weights') + 1:cp.find('hdf5') - 1])
-                rm_cp = cp
+        file_to_remove = None
+        for filename in os.listdir(ckpt_path):
+            cur_loss = parse_weight_path(filename)
+            if cur_loss > max_loss:
+                max_loss = cur_loss
+                file_to_remove = filename
 
-        if rm_cp is not None:
-            #            logging.debug('Removing %s'%rm_cp)
-            os.remove(os.path.join(base, rm_cp))
+        if filename is not None:
+            os.remove(os.path.join(ckpt_path, filename))
 
     return cb.LambdaCallback(on_epoch_end=lambda epoch, logs: f(epoch))
 
-    # Generates callbacks
-def generate_keras_callbacks(
-    path,
-    use_save_checkpoint = True,
-    use_tensorboard = True,
-    use_keep_limited_checkpoints = True,
-    use_early_stopping = True,
+def format_weight_path():
+    """
+    Function to standardize weights path generation
+    Val loss is used as the differentiation param in weights path.
+    If you change this function you must adapt parse_weights_path, its inverse brother
+    :return : formatable string with val_loss to be inserted in runtime
+    """
+    return "weights.{val_loss:.5f}.hdf5"
+
+def parse_weight_path(weight_path):
+    """
+    Parse weight filename and extract the LOSS_VARIABLE_TO_MONITOR
+    :return : floating point representation of LOSS_VARIABLE_TO_MONITOR
+    """
+    variables = parse.parse(format_weight_path(), weight_path)
+    return variables[LOSS_VARIABLE_TO_MONITOR]
+
+
+# Generates callbacks
+def get(
+    directory = None,
+    checkpoint = True,
+    tensorboard = True,
+    limit_checkpoints = True,
+    early_stopping = True,
     overwrite = False):
     
-    from os.path import join
-    
-    dt = DirectoryTree(path)
-    if use_save_checkpoint:
+
+    dt = DirectoryTree(directory)
+    if checkpoint:
         dt.add('ckpt', overwrite = overwrite)
-    if use_tensorboard:
+    if tensorboard:
         dt.add('logs', overwrite = overwrite)
 
-    # print(dt.path, dt.ckpt.path, dt.logs.path)
-    # logging.info('Initializing callbacks...')
-
     callbacks = []
-    if use_save_checkpoint:
-        checkpoint_manager = cb.ModelCheckpoint(filepath=join(dt.ckpt.path, "weights.{val_loss:.5f}.hdf5"),
-                                                monitor="val_loss",
+    if checkpoint:
+        checkpoint = cb.ModelCheckpoint(filepath=os.path.join(dt.ckpt.path, format_weight_path()),
+                                                monitor=LOSS_VARIABLE_TO_MONITOR,
                                                 verbose=1,
                                                 mode="auto",
                                                 save_best_only = False,
                                                 save_weights_only = True)
-        callbacks.append(checkpoint_manager)
+        callbacks.append(checkpoint)
 
-    if use_tensorboard:
+    if tensorboard:
         tensorboard = cb.TensorBoard(log_dir=dt.logs.path)
         callbacks.append(tensorboard)
     
-    if use_keep_limited_checkpoints:
-        keep_limited = keep_limited_checkpoints(dt.ckpt.path)
+    if limit_checkpoints:
+        keep_limited = LimitCheckpoints(dt.ckpt.path)
         callbacks.append(keep_limited)
     
-    if use_early_stopping:
+    if early_stopping:
         early_stop = cb.EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, mode='min', verbose=1)
         callbacks.append(early_stop)
 

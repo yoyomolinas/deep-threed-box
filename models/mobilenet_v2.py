@@ -5,8 +5,9 @@ def l2_normalize(x):
     import tensorflow as tf
     return tf.nn.l2_normalize(x, axis=2)
 
-def network(input_shape, num_bins):
-    mobil = keras.applications.mobilenet_v2.MobileNetV2(input_shape=input_shape, include_top=False, weights='imagenet', pooling='avg')
+def construct(input_shape, num_bins):
+    input_tensor = layers.Input(shape = input_shape, name = 'image')
+    mobil = keras.applications.mobilenet_v2.MobileNetV2(input_tensor=input_tensor, include_top=False, weights='imagenet', pooling='avg')
     x = mobil.outputs[0]
     # x = layers.Reshape((1, 1, 1280))(x)
     
@@ -27,3 +28,7 @@ def network(input_shape, num_bins):
     model = keras.Model(mobil.inputs, [dimensions, orientation, confidence])
 
     return model
+
+# Simple test function
+if __name__ == '__main__':
+    construct((224, 224, 3), 2).summary()
