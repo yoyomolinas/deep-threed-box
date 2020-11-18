@@ -14,7 +14,7 @@ This project uses datasets from the following papers:
 - [Multi-View 3D Object Detection Network for Autonomous Driving](https://arxiv.org/pdf/1611.07759.pdf) 
 
 ### Project Structure
-This project extends the [`keras-template`](https://github.com/yoyomolinas/keras-template) project. Please check it out for details.
+This project extends the [`keras-template`](https://github.com/yoyomolinas/keras-template) project. Please look there for details.
 
 ### Thanks and Contact
 This project made possible through many great open source libraries such as Tensorflow, Keras and Opencv, and many great research such as the ones listed above. It is open sourced to support the community of great builders and researchers.
